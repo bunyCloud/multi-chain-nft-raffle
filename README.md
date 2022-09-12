@@ -1,12 +1,12 @@
 # buny.cloud
 The Buny Project - Avalanche Token Factory and NFT marketplace
-# Dutch_Auction_Avalanche
-
+# 
 Avalanche SmartContract Factory and NFT Marketplace.
 
+# SmartContracts
 Fuji Testnet Deployments:
 
-#Dutch Auction Template: 0x1449D46AEFEBF46cdBe444377daC39e173C24891
+# Dutch Auction Template: 0x1449D46AEFEBF46cdBe444377daC39e173C24891
 #
 Dutch Auction Factory: 0xccAfE370Ba9F5b57b877c8282CC5973095721a1A
 #
