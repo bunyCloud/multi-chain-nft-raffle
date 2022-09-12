@@ -1,5 +1,5 @@
 # buny.cloud
-The Buny Project - Avalanche Token Factory and NFT marketplace
+The Buny Project - Avalanche Token Factory and NFT Marketplace
 #
 Hardhat - SmartContract Deployment 
 #
@@ -9,7 +9,6 @@ Moralis Web3 Provider - Avalanche Fuji testnet
 #
 IPFS - Image and metadata file storage
 #
-Avalanche SmartContract Factory and NFT Marketplace.
 
 # SmartContracts
 Fuji Testnet Deployments:
