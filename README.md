@@ -4,7 +4,7 @@ The Buny Project - Avalanche Token Factory and NFT marketplace
 
 Avalanche SmartContract Factory and NFT Marketplace.
 
-Fuji Testnet Contracts:
+Fuji Testnet Deployments:
 
 #Dutch Auction Template: 0x1449D46AEFEBF46cdBe444377daC39e173C24891
 #
@@ -14,6 +14,6 @@ ERC-721 Dynamic NFT Factory:  0x08CBf0A3ffEe33298fe3d26F624DA19B7bee9FC7
 #
 ERC-721 Static NFT Factory:  0x529e79CB6B4808F98A377B8a8fee1Ce30983e379
 #
-NFTMarket: 0x6222518591eDB175CFA534cB118db817453Ac5DA
+NFTMarketplace: 0x300616A3C499Ff1A540f02dF784472fFf672FbC3
 #
-Market NFT: 0x30780E4D9FB5980d7393700D8c90b54Fb8284FD4
+Market NFT: 0x12c1CB65A5D549980e5003Cf181131A5bD36a3C9
