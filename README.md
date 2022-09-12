@@ -2,8 +2,13 @@
 The Buny Project - Avalanche Token Factory and NFT marketplace
 #
 Hardhat - SmartContract Deployment 
+#
 React - Dapp frontend
 # 
+Moralis Web3 Provider - Avalanche Fuji testnet
+#
+IPFS - Image and metadata file storage
+#
 Avalanche SmartContract Factory and NFT Marketplace.
 
 # SmartContracts
