@@ -1,0 +1,153 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+ul[class],
+ol[class] {
+    padding: 0;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+ul[class],
+ol[class],
+li,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    text-rendering: optimizeSpeed;
+    line-height: 1.5;
+    background-color: black;
+}
+
+ul[class],
+ol[class] {
+    list-style: none;
+}
+
+a:not([class]) {
+    text-decoration-skip-ink: auto;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+article>*+* {
+    margin-top: 1em;
+}
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+.tabButton {
+    padding: 4px;
+    border-radius: 5px;
+    border-width: 0px;
+    color: white;
+    background-image: linear-gradient(90deg, #1e2f97, #ffd629);
+    width: 80px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.tabButton2 {
+    padding: 5px;
+    border-radius: 5px;
+    border-width: 0px;
+    color: white;
+    background-image: linear-gradient(90deg, #1e2f97, #ffd629);
+    width: 80px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.chainButton {
+    padding: 5px;
+    border-radius: 5px;
+    border-width: 5px;
+    border: 1px solid;
+    border-color: silver;
+    margin: 2px;
+    color: black;
+    background-color: white;
+    width: 76px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.ipfsTabs {
+    padding: 5px;
+    border-radius: 2px;
+    border-width: 2px;
+    border-color: white;
+    margin: 0px;
+    margin-left: 5px;
+    color: white;
+    background-color: rgb(47, 6, 255);
+    width: 70px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.signInCard {
+    width: 888px;
+    height: 333px;
+    background-color: black;
+    border-radius: 10px;
+    border-color: gold;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    justify-content: space-around;
+    text-align: center;
+    align-items: center;
+}
+
+.buttonCard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+#components-layout-demo-custom-trigger .trigger {
+    padding: 0 24px;
+    font-size: 18px;
+    line-height: 64px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+#components-layout-demo-custom-trigger .trigger:hover {
+    color: #1890ff;
+}
+
+#components-layout-demo-custom-trigger .logo {
+    height: 32px;
+    margin: 16px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.site-layout .site-layout-background {
+    background: #fff;
+}
