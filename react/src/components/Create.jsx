@@ -1,25 +1,21 @@
-import { useMoralisDapp } from "../providers/MoralisDappProvider/MoralisDappProvider";
+import ReactJsonViewer from "react-json-viewer-cool";
+import { Tooltip, Modal, Row, Col } from "antd";
+import { FileSearchOutlined, QuestionCircleTwoTone } from "@ant-design/icons";
 //import Chains from "./Chains";
-import { useMoralis } from "react-moralis";
-import NativeBalance from "./NativeBalance";
 import { Card, Tag, Button } from "antd";
 import { Input } from "antd";
+
+import { Text } from "@chakra-ui/react";
 import { ImageUpload, FolderUpload } from "react-ipfs-uploader";
 //import JsonExample from "./JsonExample";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Center } from "@chakra-ui/react";
-import { getExplorer } from "../helpers/networks";
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableCaption,
-  TableContainer,
-} from "@chakra-ui/react";
-
+  dFactoryAddress,
+  erc721DynamicAddress,
+  erc721StaticAddress,
+  sFactoryAddress,
+} from "contracts/config/networkAddress";
 import {
   Tabs,
   Box,
@@ -29,87 +25,79 @@ import {
   HStack,
   TabPanel,
 } from "@chakra-ui/react";
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import dFactory from "../contracts/dFactory.json";
-//import ERC20Create from "./ERC20Create";
 import sFactory from "../contracts/sFactory.json";
-import ERC20Create from "./ERC20Create";
-import DutchForm from "./DutchForm";
-import ListItem from "./Nfts/ListItem";
-
-
-
-const axios = require("axios");
-//*
-//const fujiRPC = "https://api.avax-test.network/ext/bc/C/rpc";
-//const rinkebyRPC = [
-//  "https://rinkeby.infura.io/v3/2d0b5fb8723d44b78858bf4a856b1f1f",
-//  "https://eth-rinkeby.alchemyapi.io/v2/nQ9Y9H5tBR1uaR0Jv2ubQB2_hML8VTHc",
-//];
-//const mumbaiRPC = [
-//  "https://rpc-mainnet.maticvigil.com/",
-//  "https://polygon-mumbai.infura.io/v3/00eecaae285845319b8f09c7354157ef",
-//];
+import { Link } from "react-router-dom";
 
 function Create() {
-  //const [userMetadata, setUserMetadata] = useState();
-  //const { user } = useMoralis(0);
-  const { authenticate, isAuthenticated,  logout } = useMoralis();
-  const { walletAddress, chainId } = useMoralisDapp();
-  //const { Moralis } = useMoralis();
-  //const { chainId } = useMoralis(0x4);
   const [_symbol, setSymbol] = useState("");
   const [_description, setDescription] = useState("");
   const [_name, setNFTName] = useState("");
   const [_editionSize, setEditionSize] = useState("");
-  
-  const { isWeb3Enabled, enableWeb3,  isWeb3EnableLoading } =
-    useMoralis();
-
-  useEffect(() => {
-    if (isAuthenticated && !isWeb3Enabled && !isWeb3EnableLoading) enableWeb3();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isWeb3Enabled]);
-
+  const [deployStaticText, setDeployStaticText] = useState();
+  const [deployStaticTx, setDeployStaticTx] = useState();
   const [_baseURI, setBaseURI] = useState("");
   const [_royaltyBPS, setRoyaltyBPS] = useState("");
   const [_animationUrl, setAnimationUrl] = useState("");
   const [deployStatus, setDeployStatus] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const { TextArea } = Input;
-  /////Eth Gas
-  //const [ethGasPriceLow, setEthGasPriceLow] = useState();
-  //const [ethGasPriceHigh, setEthGasPriceHigh] = useState();
-  // returned by contract event
   const [contractAddress, setContractAddress] = useState(
     " Address will display once confirmed. ",
   );
-
-  //const rinkebyChain = 0x4;
-  //const avaxChain = 0xa869;
-//const  dynamicAddress = "0x7dE784A753a4adb66F92D079E52af59dB07b8C46"; //rinkeby
-   
-const dynamicAddress = '0xB874254Dc0C9B88ecb9d8d30AFD24979f093FCFd';
-
-  //const sFactoryAddress = "0xeD95f71CBaE69eFDc9366FC3987fC18CE0A4AfBF"; // rinkeby
-  const sFactoryAddress = "0xbd7D37E9eCa342119de3808324C76Ab9360bdF1b";
-  //const [dynamicAddress, setDynamicAddress] = useState();
-  //const mumbaiAddressDynamic = "0x7dE784A753a4adb66F92D079E52af59dB07b8C46";
-  //const fujiAddressDynamic = " 0xBb3D452f166201d59eFC363A57fCBb749d704838";
+  const [initiateStatic, setInitiateStatic] = useState();
   const [deployInitiate, setDeployInitiate] = useState();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
 
-  
+  const sampleData = {
+    name: "BUNY #1",
+    description: "The BUNY Project",
+    image:
+      "https://gateway.pinata.cloud/ipfs/QmP6VWE3sL8vY4CV1q1Lh2nRhS4ALdGWoeg8DkufU7VKkf//1.png",
+    dna: "b8c45328086852f116b91e2e29f757860010c470",
+    edition: 1,
+    date: 1666450631378,
+    attributes: [
+      {
+        trait_type: "Background",
+        value: "pank",
+      },
+      {
+        trait_type: "mouth",
+        value: "orange",
+      },
+      {
+        trait_type: "chest",
+        value: "pinkSuit",
+      },
+      {
+        trait_type: "head",
+        value: "orangePink",
+      },
+    ],
+    compiler: "HashLips Art Engine",
+  };
 
   /////////////////////////////////
   //Deploy erc721Dynamic contract
   //////////////////////////////////
-  async function setDeployContract() {
+  async function setDeployDynamic() {
     if (typeof window.ethereum !== "undefined") {
       await requestAccount();
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(
-        dynamicAddress,
+        dFactoryAddress,
         dFactory.abi,
         signer,
       );
@@ -129,11 +117,10 @@ const dynamicAddress = '0xB874254Dc0C9B88ecb9d8d30AFD24979f093FCFd';
           return tx;
         }
       }
-
       setDeployInitiate("Deploying NFT Collection", tx);
       console.log("Deploying NFT Collection.....", tx);
-      setDeployStatus(`${getExplorer(chainId)}tx/${transaction.hash}`);
-      console.log(`${getExplorer(chainId)}tx/${transaction.hash}`);
+      setDeployStatus(`https://snowtrace.io/tx/${transaction.hash}`);
+      console.log(`https://snowtrace.io/tx/${transaction.hash}`);
       contract.on(
         "CreatedEdition",
         (editionId, creator, editionSize, editionContractAddress, event) => {
@@ -177,527 +164,669 @@ const dynamicAddress = '0xB874254Dc0C9B88ecb9d8d30AFD24979f093FCFd';
         _editionSize,
         _royaltyBPS,
       );
-      console.log("Deploying NFT Collection.....");
-      await transaction.wait();
+      const tx = await provider.getTransaction(transaction.hash);
+      if (tx) {
+        if (tx.blockNumber) {
+          console.log("tx: ");
+          console.log(tx);
+          return tx;
+        }
+      }
+      setInitiateStatic("Deploying NFT Collection", tx);
+      console.log("Deploying NFT Collection.....", tx);
+      setDeployStaticText("Deploying Static Image NFT Collection!");
+      console.log(
+        `Block explorer transaction hash http://snowtrace.io/tx/${transaction.hash}`,
+      );
+      setDeployStaticTx(`http://snowtrace.io/tx/tx/${transaction.hash}`);
+      contract.on(
+        "CreatedEdition",
+        (editionId, creator, editionSize, editionContractAddress, event) => {
+          const info = {
+            editionId: ethers.utils.formatUnits(editionId, 0),
+            creator: creator,
+            editionSize: ethers.utils.formatUnits(editionSize, 0),
+            editionContractAddress: editionContractAddress,
+            data: event,
+          };
+          console.log(JSON.stringify(info, null, 5));
+          setContractAddress(JSON.stringify(editionContractAddress));
+          setEditionSize(JSON.stringify(editionSize));
+        },
+      );
+    } else {
+      console.log("Contract not found");
     }
   }
 
   async function requestAccount() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
-  /*
-  async function fetchEthGas() {
-    let response = await axios.get(
-      "https://ethgasstation.info/json/ethgasAPI.json",
-    );
-    let prices = {
-      low: response.data.safeLow / 10,
-      medium: response.data.average / 10,
-      high: response.data.fast / 10,
-    };
-    setEthGasPriceLow(prices.low);
-    console.log(`Current ETH Gas Prices (in GWEI):`);
-    console.log(`Low: ${prices.low} (transaction completes in < 30 minutes)`);
-    console.log(
-      `Standard: ${prices.medium} (transaction completes in < 5 minutes)`,
-    );
-    console.log(`Fast: ${prices.high} (transaction completes in < 2 minutes)`);
-    setEthGasPriceHigh(prices.high);
-    return prices;
-  }
-
- */
-
 
   return (
-    <Tabs>
+    <>
       <Center>
-        <TabList>
-          <HStack spacing="4px">
-            <Box  h="23px">
-              <Tab className="ipfsTabs">Dynamic </Tab>
-            </Box>
-            <Box  h="23px">
-              <Tab className="ipfsTabs">Static</Tab>
-            </Box>
-            <Box  h="23px">
-              <Tab className="ipfsTabs">ERC20</Tab>
-            </Box>
-            <Box  h="23px">
-              <Tab className="ipfsTabs">Auction</Tab>
-            </Box>
-            <Box  h="23px">
-              <Tab className="ipfsTabs">Market</Tab>
-            </Box>
-          </HStack>
-        </TabList>
-      </Center>
-      <TabPanels>
-        {/* initially mounted */}
-        <TabPanel>
-          <Center>
-          <Card
-            title="NFT Contract w/ JSON metadata"
-            bodyStyle={{ padding: "1px", fontSize: "12px" }}
-            style={{
-              width: "100%",
-                  maxWidth: "390px",
-              padding: "10px",
-              borderRadius: "5px",
-              fontSize: "12px",
-              //borderColor: "orange",
-              borderWidth: "0px",
-            }}
-          >
-            <div style={{ paddingTop: "10px", width: "100%" }}>
-              <TableContainer>
-                <Table variant="simple" size="md">
-                  <TableCaption></TableCaption>
-                  <Thead>
-                    <Tr>
-                      <Th>Account</Th>
-                      <Th></Th>
-                      <Th></Th>
-                     
-                      <Th style={{ paddingLeft: "20px" }}>Chain Id</Th>
-                     
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <Tr>
-                      <Td>
-<p>{walletAddress} </p>
-                      </Td>
-                      <Td></Td>
-                      <Td></Td>
-                   
-
-                      <Td style={{ paddingLeft: "20px" }}>{chainId} </Td>
-                    
-                    </Tr>
-                  </Tbody>
-                </Table>
-              </TableContainer>
-            </div>
-            <div>
-              <p id="dynamicAddress">Implementation:</p>
-            </div>{" "}
-            <div>{dynamicAddress}</div>
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              NFT Collection Name
-            </Tag>
-            <Input
-              className="formInput"
-              placeholder="NFT Collection Name"
-              onChange={(e) => {
-                setNFTName(e.target.value);
-              }}
-              value={_name}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            </div>
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Symbol
-            </Tag>
-            <Input
-              placeholder="Symbol. 3-5 characters. ie. ETH, BTC, LINK"
-              className="formInput"
-              onChange={(e) => {
-                setSymbol(e.target.value);
-              }}
-              value={_symbol}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            </div>
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Edition Size
-            </Tag>
-            <Input
-              className="formInput"
-              placeholder="Edition size: number of tokens"
-              onChange={(e) => {
-                setEditionSize(e.target.value);
-              }}
-              value={_editionSize}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            </div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Royalties
-            </Tag>
-            <Input
-              placeholder="Royalties: set % to earn (DEV: 500=5%"
-              className="formInput"
-              onChange={(e) => {
-                setRoyaltyBPS(e.target.value);
-              }}
-              value={_royaltyBPS}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Description
-            </Tag>
-            <TextArea
-              placeholder="Description of token project"
-              rows={4}
-              style={{
-                //marginTop: 8,
-                width: "100%",
-                borderRadius: "10px",
-                maxWidth: "390px",
-                marginBottom: 8,
-                color: "black",
-                fontSize: 12,
-              }}
-              onChange={(e) => {
-                setDescription(e.target.value);
-              }}
-              value={_description}
-            />
-            </div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Metadata
-            </Tag>
-            Upload folder containing your JSON metadata files.
-            <div style={{ textAlign: "right" }}></div>
-            <FolderUpload
-              setUrl={setBaseURI}
-              style={{ width: "100%", marginBottom: 8, fontSize: 12 }}
-            />{" "}
-            <a href={_baseURI} target="_blank" rel="noopener noreferrer">
-              {_baseURI}
-            </a>{" "}
-            
-            <Input
-              className="formInput"
-              placeholder="Base URI"
-              onChange={(e) => {
-                setBaseURI(e.target.value);
-              }}
-              value={_baseURI}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            /> 
-            
+        <Card
+          bodyStyle={{ padding: "2px", fontSize: "12px", color: "white" }}
+          headStyle={{ color: "white", padding: "2px" }}
+          style={{
+            width: "100%",
+            maxWidth: "600px",
+            minWidth: "390px",
+            padding: "2px",
+            backgroundColor: "black",
+            color: "white",
+            display: "flex",
+            borderRadius: "0px",
+            fontSize: "12px",
+            margin: "4px",
+            //borderColor: "orange",
+            borderWidth: "0px",
+          }}
+        >
+          <Tabs>
             <Center>
-              <Button
-                type="primary" block
-                onClick={setDeployContract}
-                className="btn-primary"
-                style={{
-                  fontSize: 12,
-                  backgroundColor: "#0d6ef",
-                }}
-              >
-                Deploy
-              </Button>
+              <TabList>
+                <HStack spacing="8px">
+                  <Text as="mark">Select Contract type:</Text>
+
+                  <Tab className="whiteTabs">Dynamic NFT </Tab>
+                  <Tab className="whiteTabs">Static NFT</Tab>
+                </HStack>
+              </TabList>
             </Center>
-            <Center>
-              <div
-                style={{
-                  padding: "0px",
-                  backgroundColor: "#f3fdff",
-                  width: "100%",
-                  fontSize: "12px",
-                  minHeight: "150px",
-                  //margin: "5px",
-                  border: "2px solid orange",
-                }}
-              >
-                <p id="deployInitiate">{deployInitiate} </p>{" "}
-                <p id="deployStatus">{deployStatus} </p>{" "}
-                <p id="contractAddress">Contract address:{contractAddress}</p>
-              </div>
-            </Center>{" "}
-            <Card>
-              <p style={{ fontSize: "10px", padding: "10px", color: "blue" }}>
-                Open 'Account' menu to view your deployed SmartContracts{" "}
-              </p>
-            </Card>
-          </Card>
-          </Center>
-        </TabPanel>
-        <TabPanel>
-          <Center>
-          <Card
-            title="Single Image NFT"
-            bodyStyle={{ 
-              padding: "1px", 
-              fontSize: "12px"
-             }}
-            style={{
-              width: "100%",
-              maxWidth: "390px",
-              minWidth: "390px",
-              padding: "10px",
-              borderRadius: "15px",
-              fontSize: "12px",
-              borderWidth: "0px",}}
-          >
-                        <div style={{ paddingTop: "10px", width: "100%" }}>
-              <TableContainer>
-                <Table variant="simple" size="md">
-                  <TableCaption></TableCaption>
-                  <Thead>
-                    <Tr>
-                      <Th>Account</Th>
-                      <Th></Th>
-                      <Th></Th>
-                    
-                      <Th style={{ paddingLeft: "20px" }}>Chain Id</Th>
-                    
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <Tr>
-                      <Td>
-<p> {walletAddress} </p>
-                      </Td>
-                      <Td></Td>
-                      <Td></Td>
-                    
+            <TabPanels>
+              {/* initially mounted */}
+              <TabPanel>
+                <Center>
+                  <Card
+                    title="NFT Contract w/ JSON metadata"
+                    headStyle={{ color: "white" }}
+                    bodyStyle={{ padding: "30px", fontSize: "12px" }}
+                    extra={[
+                      <Button
+                        style={{
+                          backgroundColor: "transparent",
+                          padding: "5px",
+                          border: "0px solid white",
+                          color: "white",
+                        }}
+                        onClick={showModal}
+                      >
+                        <QuestionCircleTwoTone />
+                        Help
+                      </Button>,
+                    ]}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "black",
+                      backgroundSize: "cover",
+                      backgroundPosition: "absolute",
+                      minHeight: "666px",
+                      padding: "5px",
+                      borderRadius: "15px",
+                      fontSize: "12px",
+                      borderWidth: "0px",
+                    }}
+                  >
+                    <Modal
+                      title="Deploy"
+                      open={isModalOpen}
+                      onOk={handleOk}
+                      onCancel={handleCancel}
+                    >
+                      <p>Steps for deployment</p>
+                      <p></p>
+                      <p></p>
+                      <p>
+                        *Name image filename in sequential numerical order
+                        starting with 1.{" "}
+                      </p>
+                      <p>
+                        *Name JSON filename in sequential numerical order
+                        starting with 1.{" "}
+                      </p>
+                      <p></p>
+                      <Col start="1">
+                        <li>
+                          Create a JSON metadata file for your NFT collection.
+                          Each NFT will require a NFT metadata file.{" "}
+                        </li>
+                        <Row>
+                          <ReactJsonViewer data={sampleData}></ReactJsonViewer>
+                        </Row>
+                      </Col>
+                    </Modal>
+                    <Center>
+                      <div>
+                        <HStack spacing={24}>
+                          <Tooltip title="View On Blockexplorer">
+                            <Button
+                              type="link"
+                              shape="circle"
+                              onClick={() =>
+                                window.open(
+                                  `https://snowtrace.io/address/${erc721DynamicAddress}`,
+                                  "_blank",
+                                )
+                              }
+                              icon={<FileSearchOutlined />}
+                            >
+                              View NFT contract
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="View On Blockexplorer">
+                            <Button
+                              type="link"
+                              shape="circle"
+                              onClick={() =>
+                                window.open(
+                                  `https://snowtrace.io/address/${dFactoryAddress}`,
+                                  "_blank",
+                                )
+                              }
+                              icon={<FileSearchOutlined />}
+                            >
+                              View Factory contract
+                            </Button>
+                          </Tooltip>
+                        </HStack>
+                      </div>
+                    </Center>
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      NFT Collection Name
+                    </Tag>
+                    <Input
+                      className="formInput"
+                      placeholder="NFT Collection Name"
+                      onChange={(e) => {
+                        setNFTName(e.target.value);
+                      }}
+                      value={_name}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
 
-                      <Td style={{ paddingLeft: "20px" }}>{chainId} </Td>
-                    </Tr>
-                  </Tbody>
-                </Table>
-              </TableContainer>
-            </div>
-            <div>
-              <p id="dynamicAddress">Implementation:</p>
-            </div>
-              <div>{sFactoryAddress}</div>
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Collection Name
-            </Tag>
-            <Input
-              className="formInput"
-              placeholder="Product or Collection Name"
-              onChange={(e) => {
-                setNFTName(e.target.value);
-              }}
-              value={_name}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            </div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              NFT Symbol
-            </Tag>
-            <Input
-              placeholder="Symbol. 3-5 characters. ie. ETH, BTC, LINK"
-              onChange={(e) => {
-                setSymbol(e.target.value);
-              }}
-              value={_symbol}
-              className="formInput"
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Symbol
+                    </Tag>
+                    <Input
+                      placeholder="Symbol. 3-5 characters. ie. ETH, BTC, LINK"
+                      className="formInput"
+                      onChange={(e) => {
+                        setSymbol(e.target.value);
+                      }}
+                      value={_symbol}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
 
-                color: "black",
-                fontSize: 12,
-              }}
-            />{" "}
-            <div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Edition Size
-            </Tag>
-            <Input
-              className="formInput"
-              placeholder="Edition size: number of tokens"
-              onChange={(e) => {
-                setEditionSize(e.target.value);
-              }}
-              value={_editionSize}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />
-            </div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Royalties
-            </Tag>
-            <Input
-              className="formInput"
-              placeholder="Royalties: set % to earn (DEV: 500=5%) *FIX*"
-              onChange={(e) => {
-                setRoyaltyBPS(e.target.value);
-              }}
-              value={_royaltyBPS}
-              style={{
-                padding: 5,
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "390px",
-                color: "black",
-                fontSize: 12,
-              }}
-            />{" "}
-<div>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              Description
-            </Tag>
-            <TextArea
-              placeholder="Description of token project"
-              rows={4}
-              style={{
-                marginTop: 8,
-                width: "100%",
-                maxWidth: "390px",
-                marginBottom: 8,
-                color: "black",
-                fontSize: 12,
-              }}
-              onChange={(e) => {
-                setDescription(e.target.value);
-              }}
-              value={_description}
-            />{" "}
-            </div>
-            
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-            NFT Image
-            </Tag>
-            <Card
-              style={{ padding: "5px", fontSize: "10px" }}
-              bodyStyle={{ padding: "5px" }}
-            >
-              <ImageUpload
-                className="formInput"
-                setUrl={setImageUrl}
-                style={{ width: "100%", fontSize: "12px" }}
-              />
-              <p style={{ fontSize: "10px" }}>
-                {" "}
-                <a href={imageUrl} target="_blank" rel="noopener noreferrer">
-                  {" "}
-                  Image Hash: {imageUrl}
-                </a>
-              </p>
-            </Card>
-            <Tag color="#108ee9" style={{ borderRadius: "2px" }}>
-              NFT Animation
-            </Tag>
-            <Card
-              bodyStyle={{ padding: "5px" }}
-              style={{ padding: "5px" }}
-            >
-              <ImageUpload
-                setUrl={setAnimationUrl}
-                bodyStyle={{ fontSize: "12px" }}
-                style={{ width: "100%", fontSize: "12px" }}
-              />
-              <p style={{ fontSize: "10px" }}>
-                {" "}
-                <a
-                  href={_animationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Animation Hash: {_animationUrl}
-                </a>
-              </p>
-            </Card>
-            <Center>
-              <Button
-                type="primary"
-                className="btn mb-3 btn-primary"
-                onClick={setDeployStatic}
-                style={{
-                  color: "white",
-                  fontSize: 12,
-                }}
-              >
-                Deploy
-              </Button>
-            </Center>
-            <Center>
-              <div
-                style={{
-                  padding: "0px",
-                  backgroundColor: "#f3fdff",
-                  width: "100%",
-                  fontSize: "12px",
-                  minHeight: "150px",
-                  //margin: "5px",
-                  border: "2px solid orange",
-                }}
-              >
-               {/* <p id="deployStatus">{deployStatus} </p> */}
-              </div>
-            </Center>{" "}
-        <Card>
-          <p style={{ fontSize: "10px", padding: "10px", color: "blue" }}>
-            Open 'Account' menu to view your deployed SmartContracts{" "}
-          </p>
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Edition Size
+                    </Tag>
+                    <Input
+                      className="formInput"
+                      placeholder="Edition size: number of tokens"
+                      onChange={(e) => {
+                        setEditionSize(e.target.value);
+                      }}
+                      value={_editionSize}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Royalties
+                    </Tag>
+                    <Input
+                      placeholder="Royalties: set % to earn (DEV: 500=5%"
+                      className="formInput"
+                      onChange={(e) => {
+                        setRoyaltyBPS(e.target.value);
+                      }}
+                      value={_royaltyBPS}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Description
+                    </Tag>
+                    <TextArea
+                      placeholder="Description of token project"
+                      rows={4}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                      }}
+                      value={_description}
+                    />
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Metadata
+                    </Tag>
+                    Upload folder containing your JSON metadata files.
+                    <FolderUpload
+                      setUrl={setBaseURI}
+                      style={{ width: "100%", marginBottom: 8, fontSize: 12 }}
+                    />
+                    <a
+                      href={_baseURI}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {_baseURI}
+                    </a>{" "}
+                    <Input
+                      className="formInput"
+                      placeholder="Base URI"
+                      onChange={(e) => {
+                        setBaseURI(e.target.value);
+                      }}
+                      value={_baseURI}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Center>
+                      <Button
+                        type="primary"
+                        block
+                        onClick={setDeployDynamic}
+                        className="btn-primary"
+                        style={{
+                          fontSize: 12,
+                          width: "300px",
+                          color: "black",
+                          marginBottom: "10px",
+                          backgroundColor: "#ffc72c",
+                          border: "0px solid white",
+                        }}
+                      >
+                        Deploy NFT Collection
+                      </Button>
+                    </Center>
+                    <Center>
+                      <div
+                        style={{
+                          padding: "0px",
+                          backgroundColor: "#f3fdff",
+                          width: "100%",
+                          fontSize: "12px",
+                          minHeight: "150px",
+                          //margin: "5px",
+                          border: "0px solid white",
+                        }}
+                      >
+                        <p id="deployInitiate">{deployInitiate} </p>{" "}
+                        <p id="deployStatus">{deployStatus} </p>{" "}
+                        <p id="contractAddress"></p>
+                        <div>
+                          {!contractAddress && (
+                            <>
+                              <div>
+                                <strong>Address:</strong>
+                                {contractAddress}
+                              </div>
+
+                              <Link
+                                style={{ color: "blue" }}
+                                target={"_blank"}
+                                to={"/contract-loader"}
+                                contractAddress={contractAddress}
+                              >
+                                <h6>Load NFT Collection?</h6>
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Center>{" "}
+                  </Card>
+                </Center>
+              </TabPanel>
+              <TabPanel>
+                <Center>
+                  <Card
+                    title="Single Image Collection"
+                    headStyle={{ color: "white" }}
+                    bodyStyle={{ padding: "30px", fontSize: "12px" }}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "black",
+                      backgroundSize: "cover",
+                      backgroundPosition: "absolute",
+                      minHeight: "666px",
+                      padding: "5px",
+                      borderRadius: "15px",
+                      fontSize: "12px",
+                      borderWidth: "0px",
+                    }}
+                  >
+                    <div>
+                      <HStack spacing={24}>
+                        <Tooltip title="View On Blockexplorer">
+                          <Button
+                            type="link"
+                            shape="circle"
+                            onClick={() =>
+                              window.open(
+                                `https://snowtrace.io/address/${erc721StaticAddress}`,
+                                "_blank",
+                              )
+                            }
+                            icon={<FileSearchOutlined />}
+                          >
+                            View NFT contract
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="View On Blockexplorer">
+                          <Button
+                            type="link"
+                            shape="circle"
+                            onClick={() =>
+                              window.open(
+                                `https://snowtrace.io/address/${dFactoryAddress}`,
+                                "_blank",
+                              )
+                            }
+                            icon={<FileSearchOutlined />}
+                          >
+                            View Factory contract
+                          </Button>
+                        </Tooltip>
+                      </HStack>
+                    </div>
+                    <div>
+                      <Tag
+                        color="#ffc72c"
+                        style={{ color: "black", borderRadius: "1px" }}
+                      >
+                        Collection Name
+                      </Tag>
+                      <Input
+                        className="formInput"
+                        placeholder="Product or Collection Name"
+                        onChange={(e) => {
+                          setNFTName(e.target.value);
+                        }}
+                        value={_name}
+                        style={{
+                          padding: 5,
+                          marginBottom: "10px",
+                          width: "100%",
+
+                          color: "black",
+                          fontSize: 12,
+                        }}
+                      />
+                    </div>
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      NFT Symbol
+                    </Tag>
+                    <Input
+                      placeholder="Symbol. 3-5 characters. ie. ETH, BTC, LINK"
+                      onChange={(e) => {
+                        setSymbol(e.target.value);
+                      }}
+                      value={_symbol}
+                      className="formInput"
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />{" "}
+                    <div>
+                      <Tag
+                        color="#ffc72c"
+                        style={{ color: "black", borderRadius: "1px" }}
+                      >
+                        Edition Size
+                      </Tag>
+                      <Input
+                        className="formInput"
+                        placeholder="Edition size: number of tokens"
+                        onChange={(e) => {
+                          setEditionSize(e.target.value);
+                        }}
+                        value={_editionSize}
+                        style={{
+                          padding: 5,
+                          marginBottom: "10px",
+                          width: "100%",
+
+                          color: "black",
+                          fontSize: 12,
+                        }}
+                      />
+                    </div>
+                    <Tag
+                      color="#ffc72c"
+                      style={{ color: "black", borderRadius: "1px" }}
+                    >
+                      Royalties
+                    </Tag>
+                    <Input
+                      className="formInput"
+                      placeholder="Royalties: set % to earn (DEV: 500=5%) *FIX*"
+                      onChange={(e) => {
+                        setRoyaltyBPS(e.target.value);
+                      }}
+                      value={_royaltyBPS}
+                      style={{
+                        padding: 5,
+                        marginBottom: "10px",
+                        width: "100%",
+
+                        color: "black",
+                        fontSize: 12,
+                      }}
+                    />{" "}
+                    <div>
+                      <Tag
+                        color="#ffc72c"
+                        style={{ color: "black", borderRadius: "1px" }}
+                      >
+                        Description
+                      </Tag>
+                      <TextArea
+                        placeholder="Description of token project"
+                        rows={4}
+                        style={{
+                          padding: 5,
+                          marginBottom: "10px",
+                          width: "100%",
+
+                          color: "black",
+                          fontSize: 12,
+                        }}
+                        onChange={(e) => {
+                          setDescription(e.target.value);
+                        }}
+                        value={_description}
+                      />{" "}
+                    </div>
+                    <Box bg={"black"} color={"white"}>
+                      <Tag
+                        color="#ffc72c"
+                        style={{ color: "black", borderRadius: "1px" }}
+                      >
+                        Static Image
+                      </Tag>
+                      Upload primary token image to IPFS{" "}
+                      <p style={{ fontSize: "10px" }}>
+                        Accepted file types: *.jpg, png, svg, gif
+                      </p>
+                      <ImageUpload
+                        className="formInput"
+                        setUrl={setImageUrl}
+                        style={{ width: "100%", fontSize: "12px" }}
+                      />
+                    </Box>
+                    <Box bg={"black"} color={"white"}>
+                      <Tag
+                        color="#ffc72c"
+                        style={{ color: "black", borderRadius: "1px" }}
+                      >
+                        Animation Image
+                      </Tag>
+                      Upload secondary image, animation or 3d model to IPFS
+                      <p style={{ fontSize: "10px" }}>
+                        Accepted file types: gif, svg, mp4, mp3, glb, gltf{" "}
+                      </p>
+                      <ImageUpload
+                        setUrl={setAnimationUrl}
+                        bodyStyle={{ fontSize: "12px" }}
+                        style={{ width: "100%", fontSize: "12px" }}
+                      />
+                    </Box>
+                    <Center>
+                      <Button
+                        type="primary"
+                        block
+                        onClick={setDeployStatic}
+                        className="btn-primary"
+                        style={{
+                          fontSize: 12,
+                          width: "300px",
+                          color: "black",
+                          marginBottom: "10px",
+                          backgroundColor: "#ffc72c",
+                          border: "0px solid white",
+                        }}
+                      >
+                        Deploy NFT Collection
+                      </Button>
+                    </Center>
+                    <Center>
+                      <Box
+                        bg="black"
+                        color="whhite"
+                        border="1px solid blue"
+                        padding="10px"
+                      >
+                        {/* <p id="deployStatus">{deployStatus} </p> */}
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          {" "}
+                          Upload 1: {imageUrl}
+                        </Box>
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          {" "}
+                          Upload 2: {_animationUrl}
+                        </Box>
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          {deployStaticText}
+                        </Box>
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          {initiateStatic}
+                        </Box>
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          <div>Contract address:{contractAddress}</div>
+                        </Box>
+                        <Box
+                          style={{
+                            fontSize: "10px",
+                            color: "white",
+                            padding: "5px",
+                          }}
+                        >
+                          {deployStaticTx}
+                        </Box>
+                      </Box>
+                    </Center>{" "}
+                  </Card>
+                </Center>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
         </Card>
-          </Card>
-          </Center>
-        </TabPanel>
-        <TabPanel>
-<ERC20Create/>
-        </TabPanel>
-        <TabPanel>
-<DutchForm/>
-        </TabPanel>
-        <TabPanel>
-          <ListItem/>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+      </Center>
+    </>
   );
 }
 

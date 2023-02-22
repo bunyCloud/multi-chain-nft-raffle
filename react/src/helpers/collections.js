@@ -3,27 +3,20 @@ export const networkCollections = {
     //Add Your Collections here
     {
       image:
-        "https://lh3.googleusercontent.com/BWCni9INm--eqCK800BbRkL10zGyflxfPwTHt4XphMSWG3XZvPx1JyGdfU9vSor8K046DJg-Q8Y4ioUlWHiCZqgR_L00w4vcbA-w=s0",
-      name: "Buny Demo Collection",
-      addrs: "",
+        "https://gateway.pinata.cloud/ipfs/QmYKhyd7SrPJQMgDu3jdKxbKFibrHqW9gBSL4uGtWETdv5",
+      name: "The Buny Project: Avatars",
+      addrs: "0x3d4aa2cb9c19f17fdeef78e0787941b6a1a97014",
+    },
+    {
+      image: "https://buny.us-southeast-1.linodeobjects.com/bunyTv6.jpg",
+      name: "TV Buny: Single Image 3d Collection",
+      addrs: "0x4b95D68Eff934212f2529AcEFE37D71F6f3188d7",
     },
     {
       image:
-        "https://ipfs.moralis.io:2053/ipfs/QmfLbpeVHxReWKNLaXTPcWiafi49eoAL4gRwMGuXtx2Eqe/images/14.png",
-      name: "Sheep",
-      addrs: "0x01FCB818004920D2707C8EFD5AE886E3A02847eA",
-    },
-    {
-      image:
-      "https://gateway.pinata.cloud/ipfs/Qmb4PbQA3Z1xpcKCnoGdBEwnLZMhGbWQUrWe6TGeAcnLkT",
-      name: "Avax Buny Test",
-      addrs: "0x01FCB818004920D2707C8EFD5AE886E3A02847eA",
-    },
-    {
-      image:
-      "https://gateway.pinata.cloud/ipfs/Qmb4PbQA3Z1xpcKCnoGdBEwnLZMhGbWQUrWe6TGeAcnLkT",
-      name: "HatchyPocket",
-      addrs: "0xDeAB5f8794eF5aC21435b3aabeB56001eb551599",
+        "https://gateway.pinata.cloud/ipfs/QmYKhyd7SrPJQMgDu3jdKxbKFibrHqW9gBSL4uGtWETdv5",
+      name: "The Buny Project: Avatars",
+      addrs: "0x3d4aa2cb9c19f17fdeef78e0787941b6a1a97014",
     },
   ],
   "0x4": [

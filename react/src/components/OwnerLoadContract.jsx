@@ -1,63 +1,55 @@
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 //import OpenSea from "./OpenSea";
 import React, { useState } from "react";
 import { Card, Button } from "antd";
-//import NftCard from "./nftcard";
-import { getExplorer } from "../helpers/networks";
-//import { fetchNFTs } from "../utils/fetchNFTs";
-import { useMoralis } from "react-moralis";
-
-import {
-  Table,
-  Center,
-  Tbody,
-  Tr,
-  Td,
-  TableContainer,
-  Text,
-} from "@chakra-ui/react";
+import { Center, HStack } from "@chakra-ui/react";
 import { Statistic } from "antd";
 import erc721Dynamic from "../contracts/erc721Dynamic.json";
+import erc721Static from "../contracts/erc721Static.json";
 import { ethers } from "ethers";
-import { Divider, Input } from "antd";
+import { Input } from "antd";
+import { useClipboard } from "@chakra-ui/react";
+import { Tooltip } from "antd";
+import { IconButton } from "@chakra-ui/react";
+import { CopyIcon } from "@chakra-ui/icons";
 
-function OwnerLoadContract() {
-  //const [withdraw, setWithdraw] = useState("");
-  const { chainId } = useMoralis(0x4);
-
+function OwnerLoadContract(props) {
   const [minterAddress, setMinterAddress] = useState("");
   const [_allowed, setAllowed] = useState("");
   const [_NewBaseURI, setNewBaseURI] = useState();
   const [addressTo, setAddressTo] = useState("");
-
   const [totalSupply, setTotalSupply] = useState("");
   const [salesPrice, setSalesPrice] = useState();
+  const [preSalePrice, setPreSalePrice] = useState();
   const [numberCanMint, setNumberCanMint] = useState("");
-  const [setBaseURI] = useState("");
+  const [baseURI, setBaseURI] = useState("");
   const [_editionSize, setEditionSize] = useState("");
-  const [NFTs, setNFTs] = useState("");
   const [_symbol, setSymbol] = useState("");
   const [_description, setDescription] = useState("");
   const [price, setPrice] = useState();
   const [_name, setNFTName] = useState("");
-  const [contractAddress, setContractAddress] = useState(
-    "0xff6f9c17424fda52f1fb8094201f1a4325ccaa05",
-  );
+  const [contractAddress, setContractAddress] = useState([]);
   const [owner, setOwner] = useState("");
+  const [tokenUri, setTokenUri] = useState();
+  const [tokenId, setTokenId] = useState(1);
+  const [uploadUrl, setUploadUrl] = useState();
+  const [_uploadUrl, _setUploadUrl] = useState();
+  const { onCopy, value, setValue, hasCopied } = useClipboard(baseURI);
 
   async function requestAccount() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const contract = new ethers.Contract(
+    contractAddress,
+    erc721Dynamic.abi,
+    provider,
+  );
+
   async function fetchName() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.name();
         console.log("data: ", data);
@@ -68,15 +60,22 @@ function OwnerLoadContract() {
     }
   }
 
+  async function fetchTokenUri() {
+    // If MetaMask exists
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const data = await contract.tokenURI(tokenId);
+        console.log("data: ", data);
+        setTokenUri(data);
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+    }
+  }
+
   async function fetchOwner() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.owner();
         console.log("data: ", data);
@@ -90,12 +89,6 @@ function OwnerLoadContract() {
   async function fetchSymbol() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.symbol();
         console.log("data: ", data);
@@ -109,12 +102,6 @@ function OwnerLoadContract() {
   async function fetchDescription() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.description();
         console.log("data: ", data);
@@ -128,15 +115,55 @@ function OwnerLoadContract() {
   async function fetchBase() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.baseURI();
         setBaseURI(data);
+        console.log("data: ", data);
+        //setBaseURI(data);
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+    }
+  }
+  const [paused, setPaused] = useState();
+  const [publicMint, setPublicMint] = useState();
+
+  async function fetchPaused() {
+    // If MetaMask exists
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const data = await contract.paused();
+        setPublicMint(data.toString());
+        console.log("data: ", data);
+        //setBaseURI(data);
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+    }
+  }
+
+  async function fetchPublicMint() {
+    // If MetaMask exists
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const data = await contract.publicMint();
+        setPaused(data.toString());
+        console.log("data: ", data);
+        //setBaseURI(data);
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+    }
+  }
+
+  async function fetchURIs() {
+    // If MetaMask exists
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const data = await contract.getURIs();
+
+        setUploadUrl(data);
+
         console.log("data: ", data);
         //setBaseURI(data);
       } catch (error) {
@@ -148,12 +175,6 @@ function OwnerLoadContract() {
   async function fetchTotalSupply() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.totalSupply();
         console.log("data: ", data);
@@ -166,12 +187,6 @@ function OwnerLoadContract() {
 
   async function fetchSalePrice() {
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.salePrice();
         const price = ethers.utils.formatEther(data.toString());
@@ -186,12 +201,6 @@ function OwnerLoadContract() {
   async function fetchEditionSize() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.editionSize();
         console.log("data: ", data);
@@ -201,21 +210,15 @@ function OwnerLoadContract() {
       }
     }
   }
+  const [maxMint, setMax] = useState();
 
-  ////////////////////////////////
-  // Fetch max mint # per wallet //
-  //////////////////////////////////
   async function fetchNumberCanMint() {
     // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        contractAddress,
-        erc721Dynamic.abi,
-        provider,
-      );
       try {
         const data = await contract.numberCanMint();
+        const d = await contract.maxMint();
+        setMax(d.toString());
         console.log("data: ", data);
         setNumberCanMint(data);
       } catch (error) {
@@ -224,18 +227,8 @@ function OwnerLoadContract() {
     }
   }
 
-  //////////////////////////////////////////////
-  //// Contract Write Functions ///////////////////
-  //////////////////////////////////////////////////
-
-  ///////////////////
-  //set Base URI  ////
-  //////////////////
-
   async function settingBaseUri() {
     if (!_NewBaseURI) return;
-
-    // If MetaMask exists
     if (typeof window.ethereum !== "undefined") {
       await requestAccount();
 
@@ -267,18 +260,40 @@ function OwnerLoadContract() {
         erc721Dynamic.abi,
         signer,
       );
+      const convertedPrice = ethers.utils.parseUnits(price, "ether");
 
-      const transaction = await contract.setSalePrice(price);
+      const transaction = await contract.setSalePrice(convertedPrice);
       await transaction.wait();
-      setSalesPrice(price);
-      console.log(`NFT price set:  ${price}.....`);
+      setSalesPrice(Number(convertedPrice));
     }
   }
+
+  async function definePresalePrice() {
+    if (!price) return;
+    if (typeof window.ethereum !== "undefined") {
+      await requestAccount();
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      const contract = new ethers.Contract(
+        contractAddress,
+        erc721Dynamic.abi,
+        signer,
+      );
+      const convertedPrice = ethers.utils.parseUnits(price, "ether");
+
+      const transaction = await contract.setPreSalePrice(convertedPrice);
+      await transaction.wait();
+      setPreSalePrice(Number(convertedPrice));
+    }
+  }
+
   /////////////////////
   /////mint edition/////
   //////////////////////
   const [mintEditionLog, setMintEditionLog] = useState();
   const [mintEditionHash, setMintEditionHash] = useState();
+
   async function setMintEdition() {
     if (!addressTo) return;
 
@@ -305,13 +320,41 @@ function OwnerLoadContract() {
 
       setMintEditionLog(`Minting NFT to ${addressTo}`);
       console.log(`Minting NFT to ${addressTo}.....`);
-      setMintEditionHash(`${getExplorer(chainId)}tx/${transaction.hash}`);
-      console.log(`${getExplorer(chainId)}tx/${transaction.hash}`);
+      setMintEditionHash(`https://snowtrace.io/tx/tx/${transaction.hash}`);
+      console.log(`https://snowtrace.io/tx/tx/${transaction.hash}`);
     }
   }
-  ///////////////////////////
-  //Purchase Tokens
-  //////////////needs testing!
+
+  const [maxMintStatus, setMaxMintStatus] = useState();
+  const [inputMaxMint, setInputMaxMint] = useState();
+  async function putMaxMint() {
+    if (!addressTo) return;
+
+    // If MetaMask exists
+    if (typeof window.ethereum !== "undefined") {
+      await requestAccount();
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        erc721Dynamic.abi,
+        signer,
+      );
+      const transaction = await contract.setMaxMint(inputMaxMint);
+      const tx = await provider.getTransaction(transaction.hash);
+      if (tx) {
+        if (tx.blockNumber) {
+          console.log("tx: ");
+          console.log(tx);
+          return tx;
+        }
+      }
+      setMaxMintStatus(`https://snowtrace.io/tx/tx/${transaction.hash}`);
+      console.log(`https://snowtrace.io/tx/tx/${transaction.hash}`);
+    }
+  }
+
   async function purchaseToken() {
     if (!salesPrice) return;
 
@@ -332,6 +375,8 @@ function OwnerLoadContract() {
       await transaction.wait();
     }
   }
+
+  const [address, setAddress] = useState();
 
   //Owner withdraw from contract
   //formatEther
@@ -354,6 +399,34 @@ function OwnerLoadContract() {
     }
   }
 
+  async function updateTokenUri() {
+    const tokenUriUpdate = [];
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(
+      contractAddress,
+      erc721Static.abi,
+      signer,
+    );
+    const tokenURI = await contract.tokenURI(tokenId);
+
+    const jsonManifestString = atob(tokenURI.substring(29));
+    console.log("jsonManifestString", jsonManifestString);
+
+    try {
+      const jsonManifest = JSON.parse(jsonManifestString);
+      console.log("jsonManifest", jsonManifest);
+      tokenUriUpdate.push({
+        id: tokenId,
+        uri: tokenURI,
+        owner: address,
+        ...jsonManifest,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   ///////////////////////////
   //set Approved Minter
   ///////////////////////////
@@ -361,7 +434,12 @@ function OwnerLoadContract() {
     <Center>
       <Button
         type="primary"
-        style={{ backgroundColor: "blue", color: "white", fontSize: 12 }}
+        style={{
+          backgroundColor: "white",
+          color: "black",
+          width: "120px",
+          fontSize: 12,
+        }}
         onClick={async () => {
           if (typeof window.ethereum !== "undefined") {
             await requestAccount();
@@ -389,33 +467,28 @@ function OwnerLoadContract() {
   return (
     <Center>
       <Card
-        title="Owner Contract Loader"
-        bodyStyle={{ padding: "5px" }}
+        title={<p style={{ color: "white" }}> SmartContract Loader </p>}
         style={{
           width: "100%",
-maxWidth: "800px",
-          minWidth: "390px",
-          padding: "1px",
-          borderRadius: "15px",
-          fontSize: 8,
-          //borderColor: "orange",
           borderWidth: "3px",
+          padding: "5px",
+          minWidth: "350px",
+          color: "white",
+          backgroundColor: "#001fff",
         }}
+        bodyStyle={{ padding: "0px" }}
       >
-        <Text fontSize="11px">
+        <p style={{ color: "white", textAlign: "center" }}>
           Already deployed your contract? Load it here.
-        </Text>
+        </p>
         <Card
-          bodyStyle={{ padding: "5px" }}
+          bodyStyle={{ padding: "0px" }}
           style={{
             width: "100%",
-            fontSize: 12,
-            padding: "0px",
-            margin: "auto",
-            color: "black",
-            //backgroundColor: "blue",
-            borderWidth: "0px",
-            //                    borderColor: "orange",
+            borderWidth: "3px",
+            padding: "5px",
+            color: "white",
+            backgroundColor: "#001fff",
           }}
         >
           <Center>
@@ -425,12 +498,12 @@ maxWidth: "800px",
               placeholder="Enter NFT Contract Address"
               style={{
                 border: "1px solid #dfe1e5",
-                width: "90%",
+                width: "300px",
+                marginTop: "5px",
                 //width: "auto",
                 borderRadius: "24px",
                 display: "flex",
                 height: "44px",
-
                 fontSize: 12,
                 color: "black",
               }}
@@ -442,7 +515,10 @@ maxWidth: "800px",
                 //fetchNFTs(owner, contractAddress, setNFTs);
                 fetchOwner();
                 fetchSymbol();
+                fetchPaused();
                 fetchName();
+                fetchURIs();
+                fetchPublicMint();
                 fetchDescription();
                 fetchBase();
                 fetchTotalSupply();
@@ -470,432 +546,589 @@ maxWidth: "800px",
             </Button>
           </Center>
         </Card>
-
-        <TableContainer>
-          <Card
-            bodyStyle={{ padding: "5px" }}
-            style={{
-              width: "100%",
-              padding: "2px",
-
-              borderWidth: "3px",
-              backgroundColor: "#81cdf2",
-            }}
-          >
-            <Table>
-              <Tbody>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Owner:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Text fontSize="10px" color="black">
-                      {owner}
-                    </Text>
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Address
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Text fontSize="10px" color="black">
-                      {contractAddress}
-                    </Text>
-                  </Td>
-                </Tr>
-
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Collection:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Text fontSize="10px" color="black">
-                      {_name}
-                    </Text>
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="10px" color="tomato">
-                      Symbol:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Text fontSize="10px" color="black">
-                      {_symbol}
-                    </Text>
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Description:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Text fontSize="10px" color="black">
-                      {_description}
-                    </Text>
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Edition Size:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Statistic
-                      //title="Edition Size"
-                      value={_editionSize}
-                      valueStyle={{ fontSize: 12, color: "black" }}
-                    />
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Available:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Statistic
-                      //title="Available "
-                      value={numberCanMint}
-                      valueStyle={{ fontSize: 12, color: "black" }}
-                    />
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>
-                    <Text fontSize="12px" color="tomato">
-                      Total Supply:
-                    </Text>
-                  </Td>
-                  <Td></Td>
-                  <Td>
-                    <Statistic
-                      //title="Total Supply"
-                      value={totalSupply}
-                      valueStyle={{
-                        fontSize: 12,
-                        color: "black",
-                        //textAlign: "center",
-                      }}
-                    />
-                  </Td>
-                </Tr>
-              </Tbody>
-            </Table>
-          </Card>
-        </TableContainer>
         <Card
+          title={<p style={{ color: "white" }}>Contract Details</p>}
           style={{
             width: "100%",
             borderWidth: "3px",
-            //                    borderColor: "#ffb657",
-            backgroundColor: "white",
+            color: "white",
+            backgroundColor: "#001fff",
           }}
-          bodyStyle={{ padding: "5px" }}
+          bodyStyle={{ padding: "0px" }}
         >
-          <Center>
-            <Statistic
-              title="Sale Price"
-              value={salesPrice}
-              valueStyle={{ fontSize: 14, color: "black" }}
-            />
-          </Center>{" "}
+          <Box
+            w={"100%"}
+            p={5}
+            fontSize="11px"
+            bg={"black"}
+            boxShadow={"outline"}
+            rounded={"md"}
+            noOfLines={[1]}
+            overflow="hidden"
+            isTruncated
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                color: "black",
+                //padding:'2px',
+              }}
+            >
+              <HStack>
+                <div style={{ color: "black" }}>Contract:</div>
+                <div>{contractAddress}</div>
+              </HStack>
+            </div>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="11px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1]}
+              overflow="hidden"
+              isTruncated
+            >
+              <HStack>
+                <div style={{ color: "white" }}>
+                  <strong>Owner:</strong>
+                </div>
+                <div>{owner}</div>
+              </HStack>
+            </Box>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="12px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1]}
+              overflow="hidden"
+              isTruncated
+            >
+              <p>
+                <strong> Name:</strong> {_name}
+              </p>
+            </Box>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="12px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1]}
+              overflow="hidden"
+              isTruncated
+            >
+              <p>
+                <strong>Symbol:</strong> {_symbol}
+              </p>
+            </Box>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="12px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1]}
+              overflow="hidden"
+              isTruncated
+            >
+              <p>
+                <strong>Paused?:</strong> {paused}
+              </p>
+            </Box>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="12px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1]}
+              overflow="hidden"
+              isTruncated
+            >
+              <p>
+                <strong>Public min enabledt?</strong> {publicMint}
+              </p>
+            </Box>
+            <Box
+              bg={"black"}
+              w={"100%"}
+              fontSize="11px"
+              minWidth={"200px"}
+              p={5}
+            >
+              <HStack>
+                <strong>URI</strong>
+                <div>
+                  {baseURI &&
+                    `${baseURI.slice(0, 24)}...${baseURI.slice(
+                      baseURI.length - 18,
+                      baseURI.length,
+                    )}`}
+                </div>
+                <Tooltip title="Copy to clipboard">
+                  <IconButton
+                    p={2}
+                    onClick={onCopy}
+                    variant="ghost"
+                    float={"right"}
+                    color="black"
+                    aria-label="Copy to clipboard"
+                    icon={<CopyIcon />}
+                  >
+                    {hasCopied ? "Copied!" : "Copy"}
+                  </IconButton>
+                </Tooltip>
+              </HStack>
+            </Box>
+            <Box
+              w={"100%"}
+              p={5}
+              fontSize="12px"
+              bg={"black"}
+              boxShadow={"outline"}
+              rounded={"md"}
+              noOfLines={[1, 2]}
+              overflow="hidden"
+              isTruncated
+            >
+              <p>
+                <strong> Description: </strong> {_description}
+              </p>
+
+              <Box>
+                <div>{_uploadUrl}</div>
+              </Box>
+            </Box>
+          </Box>
         </Card>
         <Center>
-          <Card style={{ border: "0px", width: "100%" }}>
-            <Tabs isLazy>
+          <HStack spacing="12px" marginTop={"10px"} marginBottom={"10px"}>
+            <Statistic
+              title={<p style={{ color: "white" }}> Edition Size: </p>}
+              value={_editionSize}
+              valueStyle={{ fontSize: 12, color: "white", textAlign: "center" }}
+            />
+
+            <Statistic
+              title={<p style={{ color: "white" }}> Available: </p>}
+              value={numberCanMint}
+              valueStyle={{ fontSize: 12, color: "white", textAlign: "center" }}
+            />
+
+            <Statistic
+              title={<p style={{ color: "white" }}> Total Supply:</p>}
+              value={totalSupply}
+              valueStyle={{
+                fontSize: 12,
+                color: "white",
+                textAlign: "center",
+              }}
+            />
+            <Statistic
+              title={<p style={{ color: "white" }}> Max Mint:</p>}
+              value={maxMint}
+              valueStyle={{
+                fontSize: 12,
+                color: "white",
+                textAlign: "center",
+              }}
+            />
+          </HStack>
+        </Center>
+        <Card
+          title={<p style={{ color: "white" }}> Sale Price: </p>}
+          extra={<div style={{ color: "white" }}>{salesPrice} </div>}
+          style={{
+            width: "100%",
+            borderWidth: "3px",
+            color: "white",
+            backgroundColor: "#001fff",
+          }}
+          bodyStyle={{ padding: "0px" }}
+        ></Card>
+        <Card
+          title={<p style={{ color: "white" }}> Presale Price: </p>}
+          extra={<div style={{ color: "white" }}>{preSalePrice} </div>}
+          style={{
+            width: "100%",
+            borderWidth: "3px",
+            color: "white",
+            backgroundColor: "#001fff",
+          }}
+          bodyStyle={{ padding: "0px" }}
+        ></Card>
+        <Center>
+          <Card
+            style={{ border: "0px", width: "100%" }}
+            bodyStyle={{ padding: "0px" }}
+          >
+            <Card
+              title={<p style={{ color: "white" }}>Purchase</p>}
+              extra={
+                <Button
+                  type="primary"
+                  onClick={purchaseToken}
+                  style={{
+                    backgroundColor: "white",
+                    padding: "5px",
+                    color: "black",
+                    marginBottom: "10px",
+                    fontSize: 12,
+                    width: "120px",
+                  }}
+                >
+                  Purchase
+                </Button>
+              }
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "0px" }}
+            >
+              <p style={{ color: "white" }}>
+                Mint a token for {salesPrice} /avax
+              </p>
+            </Card>
+
+            <Card
+              title={<p style={{ color: "white" }}> Withdraw </p>}
+              extra={
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    Withdraw();
+                  }}
+                  style={{
+                    backgroundColor: "white",
+                    padding: "5px",
+                    color: "black",
+                    marginBottom: "10px",
+                    fontSize: 12,
+                    width: "120px",
+                  }}
+                >
+                  Withdraw
+                </Button>
+              }
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "0px" }}
+            >
+              <p style={{ color: "white" }}>Contract balance: /avax</p>
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Owner Mint</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "white",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
               <Center>
-                <TabList>
-                  <Tab
-                    style={{
-                      padding: "0px 16px",
-                      cursor: "pointer",
-                      height: "40px",
-                      minWidth: "80px",
-                      fontFamily: "Roboto, arial, sans-serif",
-                      lineHeight: "27px",
-                      backgroundColor: "blue",
-                      border: "1px solid silver",
-                      borderRadius: "14px",
-                      margin: "11px 8px",
-                      textAlign: "center",
-                      color: "white",
-                    }}
-                  >
-                    Manage
-                  </Tab>
-                  <Tab
-                    onClick={() => {
-                      //fetchNFTs(owner, contractAddress, setNFTs);
-                    }}
-                    style={{
-                      padding: "0px 16px",
-                      cursor: "pointer",
-                      height: "40px",
-                      minWidth: "80px",
-                      fontFamily: "Roboto, arial, sans-serif",
-                      lineHeight: "27px",
-                      backgroundColor: "blue",
-                      border: "1px solid silver",
-                      borderRadius: "14px",
-                      margin: "11px 8px",
-                      textAlign: "center",
-                      color: "white",
-                    }}
-                  >
-                    Minted
-                  </Tab>
-                  <Tab
-                    style={{
-                      //backgroundColor: "",
-                      padding: "0px 16px",
-                      cursor: "pointer",
-                      height: "40px",
-                      minWidth: "80px",
-                      fontFamily: "Roboto, arial, sans-serif",
-                      lineHeight: "27px",
-                      backgroundColor: "blue",
-                      border: "1px solid silver",
-                      borderRadius: "14px",
-                      margin: "11px 8px",
-                      textAlign: "center",
-                      color: "white",
-                    }}
-                    //onClick={fetchNFTs(owner, contractAddress, setNFTs)}
-                  >
-                    OpenSea
-                  </Tab>
-                </TabList>
+                <Input
+                  onChange={(e) => setAddressTo(e.target.value)}
+                  value={addressTo}
+                  placeholder="Mint to Address"
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
               </Center>
-              <TabPanels>
-                {/* initially mounted */}
-                <TabPanel>
-                  <Card
-                    title="Owner Mint"
-                    style={{
-                      fontSize: 12,
-                      color: "black",
-                      border: "0px",
-                      width: "100%",
-                      padding: "2px",
-                    }}
-                  >
-                    <Input
-                      onChange={(e) => setAddressTo(e.target.value)}
-                      value={addressTo}
-                      placeholder="Mint to Address"
-                      style={{
-                        padding: "2px",
-                        width: "100%",
-                        border: "1px solid blue",
-                        fontSize: 12,
-                        color: "black",
-                      }}
-                    />
-                    <Center>
-                      <Button
-                        type="primary"
-                        onClick={setMintEdition}
-                        style={{
-                          fontSize: 12,
-                          backgroundColor: "blue",
-                          color: "white",
-                        }}
-                      >
-                        Mint Edition
-                      </Button>
-                    </Center>
+              <Center>
+                <Button
+                  type="primary"
+                  onClick={setMintEdition}
+                  style={{
+                    fontSize: 12,
+                    backgroundColor: "white",
+                    color: "black",
+                    width: "120px",
+                  }}
+                >
+                  Mint Edition
+                </Button>
+              </Center>
 
-                    <Center>
-                      <div style={{ fontSize: "10px" }}>
-                        <p id="mintEditionLog">{mintEditionLog} </p>
-                        <p id="mintEditionHash">{mintEditionHash}</p>
-                      </div>
-                    </Center>
-                  </Card>
-                  <Card
-                    title="Purchase"
-                    style={{
-                      width: "100%",
-                      padding: "2px",
-                      fontSize: 12,
-                      color: "black",
-                    }}
-                  >
-                    <Center>
-                      <Button
-                        type="primary"
-                        onClick={purchaseToken}
-                        style={{
-                          backgroundColor: "blue",
-                          color: "white",
-                          fontSize: 12,
-                        }}
-                      >
-                        Purchase
-                      </Button>
-                    </Center>
-                  </Card>
+              <Center>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    overflow: "hidden",
+                    maxWidth: "300px",
+                  }}
+                >
+                  <p id="mintEditionLog">{mintEditionLog} </p>
+                  <p id="mintEditionHash">{mintEditionHash}</p>
+                </div>
+              </Center>
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Set Max Mint</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "white",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
+              <Center>
+                <Input
+                  onChange={(e) => setInputMaxMint(e.target.value)}
+                  value={inputMaxMint}
+                  placeholder="Max tokens per wallet"
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              <Center>
+                <Button
+                  type="primary"
+                  onClick={putMaxMint}
+                  style={{
+                    fontSize: 12,
+                    backgroundColor: "white",
+                    color: "black",
+                    width: "120px",
+                  }}
+                >
+                  Set Max Mint
+                </Button>
+              </Center>
 
-                  <Card
-                    title="Set Minter"
-                    style={{
-                      fontSize: 12,
-                      color: "black",
-                      padding: "2px",
-                      width: "100%",
-                      border: "0px",
-                    }}
-                  >
-                    <Input
-                      placeholder="Address"
-                      onChange={(e) => {
-                        setMinterAddress(e.target.value);
-                      }}
-                      value={minterAddress}
-                      style={{
-                        padding: 2,
-                        width: "100%",
-                        border: "1px solid blue",
-                        color: "black",
-                        fontSize: 12,
-                      }}
-                    />{" "}
-                    <Divider />
-                    <Input
-                      placeholder="Approved? (True/False)"
-                      onChange={(e) => {
-                        setAllowed(e.target.value);
-                      }}
-                      value={_allowed}
-                      style={{
-                        padding: "2px",
-                        border: "1px solid blue",
-                        width: "100%",
-                        color: "black",
-                        fontSize: 12,
-                      }}
-                    />{" "}
-                    <Divider />
-                    {setApprovedMinter}
-                  </Card>
-                  <Card
-                    title="Set Sales Price"
-                    style={{ fontSize: 12, color: "black" }}
-                  >
-                    <Input
-                      placeholder="price in wei"
-                      onChange={(e) => {
-                        setPrice(e.target.value);
-                      }}
-                      value={price}
-                      style={{
-                        padding: "2px",
-                        width: "100%",
-                        border: "1px solid blue",
-                        color: "black",
-                        fontSize: 12,
-                      }}
-                    />{" "}
-                    <Divider />
-                    <Center>
-                      <Button
-                        type="primary"
-                        onClick={definePrice}
-                        style={{
-                          backgroundColor: "blue",
-                          color: "white",
-                          fontSize: 12,
-                        }}
-                      >
-                        Set Token Price
-                      </Button>
-                    </Center>
-                  </Card>
-                  <Card
-                    title="Set Base URI"
-                    style={{
-                      fontSize: 12,
-                      color: "black",
-                      padding: "2px",
-                      width: "100%",
-                      border: "0px",
-                    }}
-                  >
-                    <Input
-                      placeholder="set baseURI *add forward / to end of URL"
-                      onChange={(e) => {
-                        setNewBaseURI(e.target.value);
-                      }}
-                      value={_NewBaseURI}
-                      style={{
-                        padding: "2px",
-                        width: "100%",
-                        color: "black",
-                        border: "1px solid blue",
-                        marginTop: 10,
-                        fontSize: 12,
-                      }}
-                    />{" "}
-                    <Divider />
-                    <Center>
-                      <Button
-                        type="primary"
-                        onClick={settingBaseUri}
-                        style={{
-                          backgroundColor: "blue",
-                          color: "white",
-                          fontSize: 12,
-                        }}
-                      >
-                        Set Base URI
-                      </Button>
-                    </Center>
-                  </Card>
+              <Center>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    overflow: "hidden",
+                    maxWidth: "300px",
+                  }}
+                >
+                  <p id="mintEditionHash">{maxMintStatus}</p>
+                </div>
+              </Center>
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Set Minter</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
+              <Center>
+                <Input
+                  placeholder="Address"
+                  onChange={(e) => {
+                    setMinterAddress(e.target.value);
+                  }}
+                  value={minterAddress}
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              <Center>
+                <Input
+                  placeholder="Approved? (True/False)"
+                  onChange={(e) => {
+                    setAllowed(e.target.value);
+                  }}
+                  value={_allowed}
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              {setApprovedMinter}
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Set Sales Price</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
+              <Center>
+                <Input
+                  placeholder="price in avax"
+                  onChange={(e) => {
+                    setPrice(e.target.value);
+                  }}
+                  value={price}
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              <Center>
+                <Button
+                  type="primary"
+                  onClick={definePrice}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    width: "120px",
+                    fontSize: 12,
+                  }}
+                >
+                  Set Token Price
+                </Button>
+              </Center>
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Set Presale Price</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
+              <Center>
+                <Input
+                  placeholder="input price in avax ie.(0.5)"
+                  onChange={(e) => {
+                    setPreSalePrice(e.target.value);
+                  }}
+                  value={preSalePrice}
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    borderRadius: "24px",
+                    display: "flex",
+                    height: "44px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              <Center>
+                <Button
+                  type="primary"
+                  onClick={definePresalePrice}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    width: "120px",
+                    fontSize: 12,
+                  }}
+                >
+                  Set Presale Price
+                </Button>
+              </Center>
+            </Card>
+            <Card
+              title={<p style={{ color: "white" }}>Set Base Uri</p>}
+              style={{
+                width: "100%",
+                borderWidth: "3px",
+                color: "black",
+                backgroundColor: "#001fff",
+              }}
+              bodyStyle={{ padding: "5px" }}
+            >
+              <Center>
+                <Input
+                  placeholder="set baseURI *add forward / to end of URL"
+                  onChange={(e) => {
+                    setNewBaseURI(e.target.value);
+                  }}
+                  value={_NewBaseURI}
+                  style={{
+                    border: "1px solid #dfe1e5",
+                    width: "300px",
+                    borderRadius: "24px",
+                    marginTop: "5px",
+                    marginBottom: "5px",
+                    display: "flex",
+                    height: "44px",
+                    fontSize: 12,
+                    color: "black",
+                  }}
+                />
+              </Center>
+              <Center>
+                <Button
+                  type="primary"
+                  onClick={settingBaseUri}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    width: "120px",
+                    fontSize: 12,
+                  }}
+                >
+                  Set Base URI
+                </Button>
+              </Center>
+            </Card>
 
-                  <Card
-                    title="Withdraw"
-                    style={{ fontSize: 12, color: "black" }}
-                  >
-                    <Center>
-                      <Button
-                        type="primary"
-                        onClick={() => {
-                          Withdraw();
-                        }}
-                        style={{
-                          backgroundColor: "blue",
-                          color: "white",
-                          fontSize: 12,
-                        }}
-                      >
-                        Withdraw Funds
-                      </Button>
-                    </Center>
-                  </Card>
-                </TabPanel>
-                {/* initially not mounted */}
-                <TabPanel>
-       {/*
+            {/*
                   <section className="flex flex-wrap justify-center">
                     {NFTs ? (
                       NFTs.map((NFT) => {
@@ -915,30 +1148,6 @@ maxWidth: "800px",
                     )}
                   </section>
                     */}
-                  <Center>
-                    <div>
-                      <Button
-                        type="primary"
-                        style={{
-                          backgroundColor: "blue",
-                          padding: "5px 5px 5px",
-                          color: "white",
-                          fontSize: 12,
-                        }}
-                        onClick={() => {
-                          //fetchNFTs(owner, contractAddress, setNFTs);
-                        }}
-                      >
-                        Refresh
-                      </Button>
-                    </div>
-                  </Center>
-                </TabPanel>
-                <TabPanel>
-                  
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
           </Card>
         </Center>
       </Card>

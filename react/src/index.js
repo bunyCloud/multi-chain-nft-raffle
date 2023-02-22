@@ -1,36 +1,27 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import { MoralisProvider } from "react-moralis";
+import { Avalanche, AvalancheTestnet, DAppProvider } from "@usedapp/core";
 import "./index.css";
-import QuickStart from "./components/QuickStart";
-import { MoralisDappProvider } from "./providers/MoralisDappProvider/MoralisDappProvider";
 
-const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-const SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
-
-const Application = () => {
-  const isServerInfo = APP_ID && SERVER_URL ? true : false;
-  if (isServerInfo)
-    return (
-      <MoralisProvider appId={APP_ID} serverUrl={SERVER_URL}>
-        <MoralisDappProvider>
-          <App isServerInfo />
-        </MoralisDappProvider>
-      </MoralisProvider>
-    );
-  else {
-    return (
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <QuickStart />
-      </div>
-    );
-  }
+const config = {
+  readOnlyChainId: Avalanche.chainId,
+  readOnlyUrls: {
+    [Avalanche.chainId]:
+      "https://avalanche-mainnet.infura.io/v3/46f4cd01725d4357a1539a393bca4f80",
+    [AvalancheTestnet.chainId]:
+      "https://avalanche-fuji.infura.io/v3/46f4cd01725d4357a1539a393bca4f80",
+  },
 };
 
+const Application = () => {
+  return <App />;
+};
 ReactDOM.render(
   // <React.StrictMode>
-  <Application />,
+  <DAppProvider config={config}>
+    <Application />,
+  </DAppProvider>,
   // </React.StrictMode>,
   document.getElementById("root"),
 );

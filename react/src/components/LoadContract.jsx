@@ -40,13 +40,6 @@ function LoadContract() {
     fetchNFTs(owner, contractAddress, setNFTs);
     fetchOwner();
     fetchSymbol();
-    fetchName();
-    fetchDescription();
-    fetchBase();
-    fetchTotalSupply();
-    fetchEditionSize();
-    fetchNumberCanMint();
-    //fetchSalePrice();
     console.log(`Reading contract ${contractAddress}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
